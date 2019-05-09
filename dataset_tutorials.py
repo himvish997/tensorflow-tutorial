@@ -205,4 +205,74 @@ Dataset objects that have the same structure. Each dataset can pass through
 its own transformation pipeline.'''
 ###############################################################################
 
-Initializable_iterator()
+def map_fnc(ele):
+    return ele*2
+
+def Reinitializable_Iterator(
+        min_val_train = 10, 
+        max_val_train = 18, 
+        min_val_validation = 1, 
+        max_val_validation = 10, 
+        batch_size = 3
+        ):
+    min_val_ = tf.placeholder(tf.int32, shape = [], name = 'min_val')
+    max_val_ = tf.placeholder(tf.int32, shape = [], name = 'max_val')
+    batch_size_ = tf.placeholder(tf.int64, shape = [], name = 'batch_size')
+
+    data = tf.range(min_val_, max_val_)
+
+    # Define separate datasets for training and validation
+    train_dataset = tf.data.Dataset.from_tensor_slices(data).batch(batch_size_)
+    val_dataset = tf.data.Dataset.from_tensor_slices(data).map(map_fnc).batch(batch_size_)
+
+    # Create an iterator
+    iterator = tf.data.Iterator.from_structure(
+        train_dataset.output_types,
+        train_dataset.output_shapes
+        )
+
+    train_initializer = iterator.make_initializer(train_dataset)
+    val_initializer = iterator.make_initializer(val_dataset)
+
+    next_ele = iterator.get_next()
+    with tf.Session() as sess:
+        print('Train Dataset:')
+        # initialize an iterator with range of values from 10 to 16
+        sess.run(train_initializer, feed_dict={
+            min_val_:min_val_train,
+            max_val_:max_val_train,
+            batch_size_:batch_size
+        })
+        try:
+            while True:
+                val = sess.run(next_ele)
+                print(val)
+        except tf.errors.OutOfRangeError:
+            pass
+
+        print("Validation Dataset:")
+        # Initialize an iterator with range of values from 1 to 10
+        sess.run(val_initializer, feed_dict={
+            min_val_:min_val_validation,
+            max_val_:max_val_validation,
+            batch_size_:batch_size
+            })
+        try:
+            while True:
+                val = sess.run(next_ele)
+                print(val)
+        except tf.errors.OutOfRangeError:
+            pass
+'''
+The Output is:
+Train Dataset:
+[10 11 12]
+[13 14 15]
+[16 17]
+Validation Dataset:
+[2 4 6]
+[ 8 10 12]
+[14 16 18]
+'''
+
+
