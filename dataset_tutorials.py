@@ -276,3 +276,49 @@ Validation Dataset:
 '''
 
 
+###############################################################################
+'''Feedable iterator: Can be used to switch between Iterators for different
+Datasets. Useful when you have different Datasets and you want to have more 
+control over which iterator to use over the Dataset.'''
+###############################################################################
+
+def map_fnc(x):
+    return x*2
+
+
+def Feedable_Iterator():
+    min_val_ = tf.placeholder(tf.int32, shape = [])
+    max_val_ = tf.placeholder(tf.int32, shape = [])
+    batch_size_ = tf.placeholder(tf.int64, shape = [])
+
+    data = tf.range(min_val_, max_val_)
+    train_dataset = tf.data.Dataset.from_tensor_slices(data).batch(batch_size_)
+    val_dataset = tf.data.Dataset.from_tensor_slices(data).map(map_fnc).batch(batch_size_)
+
+    train_val_iterator = tf.data.Iterator.from_structure(train_dataset.output_types , train_dataset.output_shapes)
+    train_initializer = train_val_iterator.make_initializer(train_dataset)
+    val_initializer = train_val_iterator.make_initializer(val_dataset)
+
+    test_dataset = tf.data.Dataset.from_tensor_slices(tf.range(10, 15))
+    test_iterator = test_dataset.make_one_shot_iterator()
+
+    handle = tf.placeholder(tf.string, shape = [])
+    iterator = tf.data.Iterator.from_string_handle(handle, train_dataset.output_types, train_dataset.output_shapes)
+    next_ele = iterator.get_next()
+
+    with tf.Session() as sess:
+        train_val_handle = sess.run(train_val_iterator.string_handle())
+        test_handle = sess.run(test_iterator.string_handle())
+
+        # training
+        sess.run(train_initializer, feed_dict={min_val_:10, max_val_:18, batch_size_:3})
+        try:
+            while True:
+                val = sess.run(next_ele, feed_dict={handle:train_val_handle})
+                print(val)
+        except tf.errors.OutOfRangeError:
+            pass
+
+
+
+Feedable_Iterator()
