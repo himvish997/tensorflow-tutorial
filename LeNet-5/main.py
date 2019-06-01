@@ -7,6 +7,7 @@ import argparse
 from One_shot_iterator import One_Shot_iterator
 from Initializable_iterator import initializable_iterator
 from ReInitializable_iterator import ReInitializable_iterator
+from Feedable_iterator import Feedable_iterator
 from download_data import train_data, val_data, test_data
 
 
@@ -15,7 +16,7 @@ parser.add_argument("-osi", "--one_shot_iterator", help="Running by the One Shot
 parser.add_argument("-ii", "--initializable_iterator", help="Running by the initializable iterator",
                     action='store_true')
 parser.add_argument("-ri", "--reinitializable_iterator", help="Running by the Re-initializable iterator", action='store_true')
-
+parser.add_argument("-fi", "--feedable_iterator", help="Running by the Feedable iterator", action='store_true')
 args = parser.parse_args()
 
 def main():
@@ -32,6 +33,11 @@ def main():
         X_train, Y_train = train_data()
         X_val, Y_val = val_data()
         ReInitializable_iterator(X_train, Y_train, X_val, Y_val)
+    if args.feedable_iterator:
+        X_train, Y_train = train_data()
+        X_val, Y_val = val_data()
+        X_test, Y_test = test_data()
+        Feedable_iterator(X_train, Y_train, X_val, Y_val, X_test, Y_test)
 
 
 
